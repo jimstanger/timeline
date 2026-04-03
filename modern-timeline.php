@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Modern Timeline
  * Description: A custom timeline plugin with multiple modern infographic designs.
- * Version: 1.2.7
+ * Version: 1.2.8
  * Author: Jim Stanger
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -54,10 +54,12 @@ class Modern_Timeline {
 
     public function render_meta_boxes( $post ) {
         wp_nonce_field( 'timeline_meta_nonce_action', 'timeline_meta_nonce' );
+        
         $date_value = get_post_meta( $post->ID, '_timeline_date', true );
-        $color_value = get_post_meta( $post->ID, '_timeline_color', true ) ?: '#00B8D4';
+        $color_value = get_post_meta( $post->ID, '_timeline_color', true );
+        if ( empty( $color_value ) ) $color_value = '#00B8D4';
 
-        echo '<p><label for="timeline_date"><strong>Event Date:</strong></label><br>';
+        echo '<p><label for="timeline_date"><strong>Event Date (Used for sorting):</strong></label><br>';
         echo '<input type="date" id="timeline_date" name="timeline_date" value="' . esc_attr( $date_value ) . '" style="width:100%; margin-top:5px;" /></p>';
 
         echo '<p><label for="timeline_color"><strong>Primary Color:</strong></label><br>';
@@ -68,8 +70,14 @@ class Modern_Timeline {
         if ( ! isset( $_POST['timeline_meta_nonce'] ) || ! wp_verify_nonce( $_POST['timeline_meta_nonce'], 'timeline_meta_nonce_action' ) ) return;
         if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) return;
         if ( ! current_user_can( 'edit_post', $post_id ) ) return;
-        if ( isset( $_POST['timeline_date'] ) ) update_post_meta( $post_id, '_timeline_date', sanitize_text_field( $_POST['timeline_date'] ) );
-        if ( isset( $_POST['timeline_color'] ) ) update_post_meta( $post_id, '_timeline_color', sanitize_hex_color( $_POST['timeline_color'] ) );
+
+        if ( isset( $_POST['timeline_date'] ) ) {
+            update_post_meta( $post_id, '_timeline_date', sanitize_text_field( $_POST['timeline_date'] ) );
+        }
+        
+        if ( isset( $_POST['timeline_color'] ) ) {
+            update_post_meta( $post_id, '_timeline_color', sanitize_hex_color( $_POST['timeline_color'] ) );
+        }
     }
 
     public function register_settings_page() {
@@ -95,7 +103,7 @@ class Modern_Timeline {
                                 <option value="alternating-vertical-small" <?php selected( get_option('modern_timeline_design'), 'alternating-vertical-small' ); ?>>Alternating Vertical Small</option>
                                 <option value="horizontal-flag-cards" <?php selected( get_option('modern_timeline_design'), 'horizontal-flag-cards' ); ?>>Horizontal Flag Cards</option>
                             </select>
-                            <p class="description">Global layout setting.</p>
+                            <p class="description">This design will be used globally unless you override it in a specific shortcode.</p>
                         </td>
                     </tr>
                 </table>
@@ -105,23 +113,42 @@ class Modern_Timeline {
             <hr style="margin-top: 30px; margin-bottom: 30px;">
 
             <h2>How to Use the Shortcode</h2>
-            <p>Use <code>[timeline topic="topic-slug"]</code> to display items. Override with <code>design="slug"</code>.</p>
+            <p>To display your timelines on any post or page, use the <code>[timeline]</code> shortcode. You must specify which <strong>Topic</strong> to display by using its slug.</p>
+            
+            <table class="form-table">
+                <tr valign="top">
+                    <th scope="row"><strong>Basic Usage:</strong></th>
+                    <td>
+                        <code>[timeline topic="company-history"]</code>
+                        <p class="description">Replace <code>company-history</code> with the actual slug of the Timeline Topic you want to show.</p>
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <th scope="row"><strong>Override Design:</strong></th>
+                    <td>
+                        <code>[timeline topic="company-history" design="alternating-vertical-small"]</code><br><br>
+                        <code>[timeline topic="company-history" design="horizontal-flag-cards"]</code><br><br>
+                        <code>[timeline topic="company-history" design="alternating-vertical"]</code>
+                        <p class="description">Add the <code>design</code> parameter to force a specific layout for that single page, ignoring the global default setting above.</p>
+                    </td>
+                </tr>
+            </table>
         </div>
         <?php
     }
 
     public function enqueue_styles() {
-        wp_enqueue_style( 'modern-timeline-css', plugin_dir_url( __FILE__ ) . 'timeline.css', array(), '3.0.0' );
+        wp_enqueue_style( 'modern-timeline-css', plugin_dir_url( __FILE__ ) . 'timeline.css', array(), '3.1.0' );
     }
 
     public function render_timeline_shortcode( $atts ) {
         $atts = shortcode_atts( array( 'topic' => '', 'design' => '' ), $atts, 'timeline' );
         $args = array(
-            'post_type' => 'timeline_item',
+            'post_type'      => 'timeline_item',
             'posts_per_page' => -1,
-            'meta_key' => '_timeline_date',
-            'orderby' => 'meta_value',
-            'order' => 'ASC',
+            'meta_key'       => '_timeline_date',
+            'orderby'        => 'meta_value',
+            'order'          => 'ASC',
         );
 
         if ( ! empty( $atts['topic'] ) ) {

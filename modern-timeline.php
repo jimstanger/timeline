@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Modern Timeline
  * Description: A custom timeline plugin with multiple modern infographic designs.
- * Version: 1.2.6
+ * Version: 1.2.7
  * Author: Jim Stanger
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -58,7 +58,7 @@ class Modern_Timeline {
         $color_value = get_post_meta( $post->ID, '_timeline_color', true ) ?: '#00B8D4';
 
         echo '<p><label for="timeline_date"><strong>Event Date:</strong></label><br>';
-        echo '<input type="date" id="timeline_date" name="timeline_date" value="' . esc_attr( $date_value ) . '" style="width:100%;" /></p>';
+        echo '<input type="date" id="timeline_date" name="timeline_date" value="' . esc_attr( $date_value ) . '" style="width:100%; margin-top:5px;" /></p>';
 
         echo '<p><label for="timeline_color"><strong>Primary Color:</strong></label><br>';
         echo '<input type="text" id="timeline_color" name="timeline_color" value="' . esc_attr( $color_value ) . '" class="mt-color-picker" /></p>';
@@ -95,6 +95,7 @@ class Modern_Timeline {
                                 <option value="alternating-vertical-small" <?php selected( get_option('modern_timeline_design'), 'alternating-vertical-small' ); ?>>Alternating Vertical Small</option>
                                 <option value="horizontal-flag-cards" <?php selected( get_option('modern_timeline_design'), 'horizontal-flag-cards' ); ?>>Horizontal Flag Cards</option>
                             </select>
+                            <p class="description">Global layout setting.</p>
                         </td>
                     </tr>
                 </table>
@@ -104,26 +105,13 @@ class Modern_Timeline {
             <hr style="margin-top: 30px; margin-bottom: 30px;">
 
             <h2>How to Use the Shortcode</h2>
-            <table class="form-table">
-                <tr valign="top">
-                    <th scope="row"><strong>Basic Usage:</strong></th>
-                    <td><code>[timeline topic="your-topic-slug"]</code></td>
-                </tr>
-                <tr valign="top">
-                    <th scope="row"><strong>Override Design:</strong></th>
-                    <td>
-                        <code>design="alternating-vertical-small"</code><br>
-                        <code>design="horizontal-flag-cards"</code><br>
-                        <code>design="alternating-vertical"</code>
-                    </td>
-                </tr>
-            </table>
+            <p>Use <code>[timeline topic="topic-slug"]</code> to display items. Override with <code>design="slug"</code>.</p>
         </div>
         <?php
     }
 
     public function enqueue_styles() {
-        wp_enqueue_style( 'modern-timeline-css', plugin_dir_url( __FILE__ ) . 'timeline.css', array(), '2.9.0' );
+        wp_enqueue_style( 'modern-timeline-css', plugin_dir_url( __FILE__ ) . 'timeline.css', array(), '3.0.0' );
     }
 
     public function render_timeline_shortcode( $atts ) {
